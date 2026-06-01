@@ -4,7 +4,7 @@ import db from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-02-18.acceptance', // Using a stable version
+apiVersion: '2026-05-27.dahlia' as any,', // Using a stable version
 });
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
