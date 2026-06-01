@@ -1,9 +1,7 @@
-RUN npx tsc --skipLibCheck --noEmitOnError false || true
-RUN apt-get update -qq && apt-get install -y -qq python3 make g++ && rm -rf /var/lib/apt/lists/*
+FROM node:20-slim
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . ./
-RUN npm run build
 EXPOSE 3001
-CMD ["npm", "start"]
+CMD ["npx", "ts-node-dev", "--respawn", "--transpile-only", "src/server.ts"]
