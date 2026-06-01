@@ -1,22 +1,21 @@
 # Deployment Guide - AnatoMentor
 
-This document provides the exact settings required to deploy AnatoMentor, ensuring stability and performance.
+This document provides the exact settings required to deploy AnatoMentor to production environments (Render, Railway, etc.).
 
 ## 1. Pre-Deployment Checklist
-Before pushing any changes, run the automated preflight check:
+Always run the automated preflight check before pushing changes:
 ```bash
 npm run verify-deployment
 ```
 This script ensures:
-- Root and backend `package.json` are valid JSON.
-- Required deployment scripts (`build`, `start`) are present.
-- Critical configurations are valid.
+- All `package.json` files are valid JSON.
+- Production scripts (`build`, `start`) are present and valid.
 
 ---
 
-## 2. Backend Deployment (Render/Railway)
+## 2. Backend Deployment (Node.js Runtime)
 
-The recommended path is using the **Node.js runtime**.
+Use these settings for a standard production deployment.
 
 | Setting | Value |
 |---------|-------|
@@ -25,18 +24,18 @@ The recommended path is using the **Node.js runtime**.
 | **Build Command** | `npm install && npm run build` |
 | **Start Command** | `npm start` |
 
-### Environment Variables
-- `PORT`: `3001` (Auto-assigned on Render)
-- `JWT_SECRET`: [Your Secret]
-- `STRIPE_SECRET_KEY`: [Your Secret]
-- `OPENAI_API_KEY`: [Your Secret]
+### Required Environment Variables
+- `PORT`: `3001` (Note: Render assigns this automatically).
+- `JWT_SECRET`: A secure random string.
+- `STRIPE_SECRET_KEY`: Your Stripe secret.
+- `OPENAI_API_KEY`: Your OpenAI API key.
 - `NODE_ENV`: `production`
 
 ---
 
-## 3. Docker Deployment
+## 3. Backend Deployment (Docker)
 
-If deploying via Docker, use the provided `backend/Dockerfile`.
+Use the provided `backend/Dockerfile` for containerized deployment.
 
 | Setting | Value |
 |---------|-------|
@@ -44,11 +43,11 @@ If deploying via Docker, use the provided `backend/Dockerfile`.
 | **Runtime** | `Docker` |
 | **Dockerfile Path** | `./Dockerfile` |
 
-### Verify Docker Locally
+### Local Docker Verification
 ```bash
 cd backend
 docker build -t anatomentor-backend .
-docker run -p 3001:3001 --env-file .env anatomentor-backend
+docker run -p 3001:3001 anatomentor-backend
 ```
 
 ---
@@ -63,9 +62,7 @@ docker run -p 3001:3001 --env-file .env anatomentor-backend
 
 ---
 
-## 5. Troubleshooting: "Root directory does not exist"
-If you see an error like `Root directory 'npm run dev' does not exist`:
-1. Go to your dashboard settings.
-2. Find the **Root Directory** field.
-3. Ensure it is set to `backend`, **not** a command.
-4. Commands belong in **Build Command** and **Start Command** fields.
+## 5. Troubleshooting
+### Error: "Root directory 'npm run dev' does not exist"
+This occurs if the start command was pasted into the **Root Directory** field. 
+**Fix**: Set Root Directory to `backend` and move the command to the **Start Command** field.

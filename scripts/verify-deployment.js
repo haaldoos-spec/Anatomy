@@ -15,11 +15,13 @@ function validatePackageJson(filePath) {
     }
     
     if (filePath.includes('backend')) {
-      if (!pkg.scripts.dev) throw new Error('Missing "dev" script in backend');
+      // Production must have build and start
       if (!pkg.scripts.build) throw new Error('Missing "build" script in backend');
+      if (!pkg.scripts.start) throw new Error('Missing "start" script in backend');
+      // dev is nice but not strictly required for production deploy, but we use it in dev
     }
     
-    console.log(`✅ ${filePath} is valid JSON and has required scripts.`);
+    console.log(`✅ ${filePath} is valid JSON and has required production scripts.`);
   } catch (error) {
     console.error(`❌ Error in ${filePath}: ${error.message}`);
     process.exit(1);
