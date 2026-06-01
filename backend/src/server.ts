@@ -19,7 +19,8 @@ initDb().then(() => {
 
   setupSocketHandlers(io);
 
-  server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  const HOST = process.env.HOST || '0.0.0.0';
+  server.listen(Number(PORT), HOST, () => {
+    console.log(`Server is running on ${HOST}:${PORT}`);
   });
 }).catch(console.error);
