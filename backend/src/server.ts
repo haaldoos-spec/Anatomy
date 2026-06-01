@@ -13,7 +13,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: '*', // In production, replace with actual frontend URL
+    origin: '*',
     methods: ['GET', 'POST'],
   },
 });

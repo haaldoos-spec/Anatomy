@@ -53,8 +53,8 @@ export const initDb = () => {
       quiz_id TEXT,
       question_en TEXT NOT NULL,
       question_sv TEXT NOT NULL,
-      options_en TEXT, -- JSON array
-      options_sv TEXT, -- JSON array
+      options_en TEXT,
+      options_sv TEXT,
       correct_answer_en TEXT NOT NULL,
       correct_answer_sv TEXT NOT NULL,
       explanation_en TEXT,
@@ -117,11 +117,11 @@ export const initDb = () => {
       id TEXT PRIMARY KEY,
       challenger_id TEXT,
       challenged_id TEXT,
-      status TEXT DEFAULT 'pending', -- pending, accepted, declined, completed, canceled
+      status TEXT DEFAULT 'pending',
       challenger_score INTEGER DEFAULT 0,
       challenged_score INTEGER DEFAULT 0,
-      challenger_finished INTEGER DEFAULT 0, -- 0 for false, 1 for true
-      challenged_finished INTEGER DEFAULT 0, -- 0 for false, 1 for true
+      challenger_finished INTEGER DEFAULT 0,
+      challenged_finished INTEGER DEFAULT 0,
       winner_id TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (challenger_id) REFERENCES users(id),
