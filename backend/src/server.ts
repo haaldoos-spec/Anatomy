@@ -7,19 +7,19 @@ import { setupSocketHandlers } from './services/socketService';
 const PORT = process.env.PORT || 3001;
 
 // Initialize Database
-initDb();
+initDb().then(() => {
+  const server = http.createServer(app);
 
-const server = http.createServer(app);
+  const io = new Server(server, {
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST'],
+    },
+  });
 
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
-});
+  setupSocketHandlers(io);
 
-setupSocketHandlers(io);
-
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}).catch(console.error);
