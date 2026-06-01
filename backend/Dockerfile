@@ -1,22 +1,28 @@
+# Build stage
+FROM node:20-slim AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+# Production stage
 FROM node:20-slim
 
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json ./
-# Install all dependencies including devDependencies for ts-node-dev
-RUN npm install
+ENV NODE_ENV=production
 
-# Copy source
-COPY . .
+COPY --from=builder /app/package*.json ./
+RUN npm install --omit=dev
 
-# Disable desktop notifications for ts-node-dev in container
-ENV TS_NODE_DEV_NO_NOTIFY=true
+COPY --from=builder /app/dist ./dist
+# If you have other assets like seed data or static files, copy them here
+# COPY --from=builder /app/src/utils/seedData.ts ./src/utils/
 
-# Bind to 0.0.0.0 is important for Docker/Render
-ENV HOST=0.0.0.0
-# The server.ts already uses process.env.PORT
 EXPOSE 3001
 
-# Start the application using ts-node-dev
-CMD ["npm", "run", "dev"]
+CMD ["node", "dist/server.js"]
