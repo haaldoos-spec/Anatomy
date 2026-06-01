@@ -4,7 +4,7 @@ import db from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-01-27-ac', // Using a stable version
+  apiVersion: '2025-02-18.acceptance', // Using a stable version
 });
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -63,7 +63,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
 
 export const handleWebhook = async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'] as string;
-  let event: Stripe.Event;
+  let event: any;
 
   try {
     event = stripe.webhooks.constructEvent(
@@ -79,7 +79,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
   // Handle the event
   switch (event.type) {
     case 'checkout.session.completed': {
-      const session = event.data.object as Stripe.Checkout.Session;
+      const session = event.data.object as any;
       const userId = session.metadata?.userId;
       const subscriptionId = session.subscription as string;
       const plan = session.metadata?.plan;
@@ -94,7 +94,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
       break;
     }
     case 'customer.subscription.updated': {
-      const subscription = event.data.object as Stripe.Subscription;
+      const subscription = event.data.object as any;
       const customerId = subscription.customer as string;
       const status = subscription.status;
 
@@ -106,7 +106,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
       break;
     }
     case 'customer.subscription.deleted': {
-      const subscription = event.data.object as Stripe.Subscription;
+      const subscription = event.data.object as any;
       const customerId = subscription.customer as string;
 
       db.prepare(`
