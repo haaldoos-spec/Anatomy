@@ -1,4 +1,4 @@
-{
+"build": "tsc --skipLibCheck --noEmitOnError false",{
   "name": "backend",
   "version": "1.0.0",
   "description": "",
