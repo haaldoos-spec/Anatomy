@@ -13,9 +13,9 @@ This script ensures:
 
 ---
 
-## 2. Backend Deployment (Node.js Runtime)
+## 2. Backend Deployment (Render / Railway)
 
-Use these settings for a standard production deployment.
+The supported deployment path for the backend is as a **Web Service** using the **Node.js runtime**.
 
 | Setting | Value |
 |---------|-------|
@@ -26,33 +26,14 @@ Use these settings for a standard production deployment.
 
 ### Required Environment Variables
 - `PORT`: `3001` (Note: Render assigns this automatically).
-- `JWT_SECRET`: A secure random string.
-- `STRIPE_SECRET_KEY`: Your Stripe secret.
+- `JWT_SECRET`: A secure random string for signing tokens.
+- `STRIPE_SECRET_KEY`: Your Stripe secret key.
 - `OPENAI_API_KEY`: Your OpenAI API key.
 - `NODE_ENV`: `production`
 
 ---
 
-## 3. Backend Deployment (Docker)
-
-Use the provided `backend/Dockerfile` for containerized deployment.
-
-| Setting | Value |
-|---------|-------|
-| **Root Directory** | `backend` |
-| **Runtime** | `Docker` |
-| **Dockerfile Path** | `./Dockerfile` |
-
-### Local Docker Verification
-```bash
-cd backend
-docker build -t anatomentor-backend .
-docker run -p 3001:3001 anatomentor-backend
-```
-
----
-
-## 4. Frontend Deployment (Vercel)
+## 3. Frontend Deployment (Vercel / Netlify)
 
 | Setting | Value |
 |---------|-------|
@@ -62,7 +43,7 @@ docker run -p 3001:3001 anatomentor-backend
 
 ---
 
-## 5. Troubleshooting
+## 4. Troubleshooting
 ### Error: "Root directory 'npm run dev' does not exist"
-This occurs if the start command was pasted into the **Root Directory** field. 
-**Fix**: Set Root Directory to `backend` and move the command to the **Start Command** field.
+This occurs if the start command was accidentally pasted into the **Root Directory** field in the Render/Railway dashboard. 
+**Fix**: Set **Root Directory** to `backend` and move the command to the **Start Command** field.
