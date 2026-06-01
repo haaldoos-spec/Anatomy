@@ -1,44 +1,82 @@
-# Deployment Guide - AnatoMentor Backend
+# Deployment Guide - AnatoMentor
 
-This guide explains how to deploy the AnatoMentor Backend (Node.js/Express) correctly.
+This document provides the exact settings required to deploy the AnatoMentor backend and frontend, with a focus on resolving common configuration errors.
 
-## Common Error: "Root directory ' npm run dev.' does not exist"
-If you see this error, it means the **Root Directory** setting in your deployment dashboard (Render, Railway, Vercel, etc.) is misconfigured. 
-**Fix:** Ensure the "Root Directory" is set to `backend` and NOT a command like `npm run dev`.
+## Recommended Path
+The recommended way to deploy the backend is as a **Web Service on Render** using the **Node.js runtime** (Non-Docker flow).
 
-## Recommended Platform Settings
+---
 
-### 1. Render (Web Service)
-- **Repo:** This repository
-- **Root Directory:** `backend`
-- **Runtime:** `Node`
-- **Build Command:** `npm run build`
-- **Start Command:** `npm start`
-- **Environment Variables:**
-  - `PORT`: `3001` (or leave empty if Render assigns one)
-  - `JWT_SECRET`: (your secret)
-  - `STRIPE_SECRET_KEY`: (your key)
-  - `OPENAI_API_KEY`: (your key)
+## 1. Fixing the "Root directory ' npm run dev.' does not exist" Error
 
-### 2. Railway
-- **Root Directory:** `backend`
-- **Build Command:** `npm run build`
-- **Start Command:** `npm start`
-- **Environment Variables:** Same as above.
+This error occurs when a command is accidentally pasted into the **Root Directory** field of your deployment dashboard.
 
-### 3. Vercel (Optional, mostly for Frontend)
-If you deploy the backend on Vercel:
-- **Project Root:** `backend`
-- **Framework Preset:** `Other`
-- **Build Command:** `npm run build`
-- **Output Directory:** `dist`
+### Step-by-Step Correction (Render/Railway):
+1. Open your Web Service settings in the dashboard.
+2. Locate the **Root Directory** field.
+3. If it contains `npm run dev` or any other command, **delete it**.
+4. Set the **Root Directory** to exactly: `backend`
+5. Save the changes and trigger a new deploy.
 
-## Docker Deployment
-We have provided a `backend/Dockerfile` for containerized deployment.
-- **Port:** The container exposes port `3001`.
-- **Build:** `docker build -t anatomentor-backend ./backend`
-- **Run:** `docker run -p 3001:3001 anatomentor-backend`
+---
 
-## Database Note
-The backend uses SQLite (`database.sqlite`). In ephemeral environments (like Render or Railway without a persistent disk), the database will reset on every redeploy.
-**Recommendation:** For production, consider using a persistent volume/disk and mounting it to the `backend` directory, or switching to a hosted PostgreSQL database.
+## 2. Backend Deployment Settings (Non-Docker Flow)
+
+Use these settings for a standard Node.js deployment (e.g., on Render or Railway).
+
+| Setting | Value |
+|---------|-------|
+| **Root Directory** | `backend` |
+| **Runtime** | `Node` |
+| **Build Command** | `npm run build` |
+| **Start Command** | `npm start` |
+
+### Required Environment Variables:
+- `PORT`: `3001` (Note: Render assigns this automatically, but you can set it explicitly).
+- `JWT_SECRET`: A long random string for authentication.
+- `STRIPE_SECRET_KEY`: Your Stripe secret key.
+- `OPENAI_API_KEY`: Your OpenAI API key.
+
+---
+
+## 3. Backend Deployment Settings (Docker Flow)
+
+If you prefer using Docker, the repository includes a `backend/Dockerfile`.
+
+| Setting | Value |
+|---------|-------|
+| **Root Directory** | `backend` |
+| **Runtime** | `Docker` |
+| **Dockerfile Path** | `./Dockerfile` (relative to Root Directory) |
+
+*Note: Ensure port `3001` is exposed in your platform settings if using Docker.*
+
+---
+
+## 4. Frontend Deployment Settings (Vercel)
+
+| Setting | Value |
+|---------|-------|
+| **Framework Preset** | `Next.js` |
+| **Build Command** | `next build` |
+| **Output Directory** | `.next` |
+
+---
+
+## 5. Verification (Clean Environment)
+
+To verify the backend is ready for production, you can run these commands in a clean environment:
+
+```bash
+cd backend
+npm install
+npm run build
+PORT=3005 NODE_ENV=production node dist/server.js
+```
+
+**Expected Output Snippet:**
+```
+Database initialized at: /.../backend/database.sqlite
+Loading existing database from disk (or creating new)
+Server is running on port 3005
+```
