@@ -1,3 +1,4 @@
+// @ts-ignore
 import initSqlJs from 'sql.js';
 import path from 'path';
 import fs from 'fs';
@@ -8,35 +9,25 @@ const dbDir = path.dirname(dbPath);
 let db: any = null;
 let SQL: any = null;
 
-// Wrapper that mimics better-sqlite3 API
 const dbWrapper = {
   prepare: (sql: string) => {
     return {
       get: (...params: any[]) => {
         if (!db) throw new Error('Database not initialized');
         const stmt = db.prepare(sql);
-        stmt.bind(params);
-        let row: any = undefined;
-        if (stmt.step()) {
-          const cols = stmt.getColumnNames();
-          const vals = stmt.get();
-          row = {};
-          cols.forEach((c: string, i: number) => row[c] = vals[i]);
-        }
+        const actualParams = params.length === 1 && Array.isArray(params[0]) ? params[0] : params;
+        const result = stmt.getAsObject(actualParams);
         stmt.free();
-        return row;
+        return Object.keys(result).length > 0 ? result : undefined;
       },
       all: (...params: any[]) => {
         if (!db) throw new Error('Database not initialized');
         const stmt = db.prepare(sql);
-        stmt.bind(params);
-        const rows: any[] = [];
+        const actualParams = params.length === 1 && Array.isArray(params[0]) ? params[0] : params;
+        stmt.bind(actualParams);
+        const rows = [];
         while (stmt.step()) {
-          const cols = stmt.getColumnNames();
-          const vals = stmt.get();
-          const row: any = {};
-          cols.forEach((c: string, i: number) => row[c] = vals[i]);
-          rows.push(row);
+          rows.push(stmt.getAsObject());
         }
         stmt.free();
         return rows;
@@ -44,10 +35,11 @@ const dbWrapper = {
       run: (...params: any[]) => {
         if (!db) throw new Error('Database not initialized');
         const stmt = db.prepare(sql);
-        stmt.bind(params);
-        stmt.step();
+        const actualParams = params.length === 1 && Array.isArray(params[0]) ? params[0] : params;
+        stmt.run(actualParams);
         stmt.free();
         saveDb();
+        return { changes: 1, lastInsertRowid: 0 };
       }
     };
   },
@@ -59,23 +51,36 @@ const dbWrapper = {
 };
 
 function saveDb() {
-  if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
-  fs.writeFileSync(dbPath, Buffer.from(db.export()));
+  try {
+    if (!fs.existsSync(dbDir)) {
+      console.log(`Creating database directory: ${dbDir}`);
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+    const data = db.export();
+    fs.writeFileSync(dbPath, Buffer.from(data));
+  } catch (error) {
+    console.error('Failed to save database to disk:', error);
+    // In a production environment, we might want to alert someone here
+  }
 }
 
 export const initDb = async () => {
-  if (db) return; // Already initialized
+  if (db) return;
 
-  SQL = await initSqlJs();
-  
-  if (fs.existsSync(dbPath)) {
-    const buffer = fs.readFileSync(dbPath);
-    db = new SQL.Database(buffer);
-  } else {
-    db = new SQL.Database();
-  }
-  db.run('PRAGMA journal_mode=WAL');
-  db.run('PRAGMA foreign_keys=ON');
+  console.log(`Initializing database at: ${dbPath}`);
+  try {
+    SQL = await initSqlJs();
+    
+    if (fs.existsSync(dbPath)) {
+      console.log('Loading existing database from disk');
+      const buffer = fs.readFileSync(dbPath);
+      db = new SQL.Database(buffer);
+    } else {
+      console.log('Creating new in-memory database');
+      db = new SQL.Database();
+    }
+    
+    db.run('PRAGMA foreign_keys=ON');
 
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, password TEXT NOT NULL,
@@ -131,22 +136,23 @@ export const initDb = async () => {
 
   saveDb();
 
-  // Seed data
+  // Seed data check
   const countStmt = db.prepare('SELECT COUNT(*) as count FROM quizzes');
-  if (countStmt.step()) {
-    const res = countStmt.get();
-    if (res[0] === 0) {
-      countStmt.free();
-      const { seedQuizzes } = require('../utils/seedData');
-      seedQuizzes();
-    } else {
-      countStmt.free();
-    }
-  } else {
-    countStmt.free();
+  const hasRows = countStmt.step();
+  const res = hasRows ? countStmt.getAsObject() : { count: 0 };
+  countStmt.free();
+
+  if (res.count === 0) {
+    console.log('Seeding initial quizzes...');
+    const { seedQuizzes } = require('../utils/seedData');
+    seedQuizzes();
   }
 
   console.log('Database initialized');
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    throw error;
+  }
 };
 
 export default dbWrapper;

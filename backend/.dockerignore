@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+database.sqlite
+database.sqlite-journal
+database.sqlite-wal
+*.log
+.git

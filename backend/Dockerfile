@@ -1,9 +1,19 @@
 FROM node:20-slim
-RUN apt-get update -qq && apt-get install -y -qq python3 make g++ && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
+
+# Install dependencies
 COPY package*.json ./
 RUN npm install
-COPY . ./
+
+# Copy source and build
+COPY . .
 RUN npm run build
+
 EXPOSE 3001
-CMD ["npm", "start"]
+
+# Use production mode
+ENV NODE_ENV=production
+
+# Start the application using the compiled files
+CMD ["node", "dist/server.js"]
