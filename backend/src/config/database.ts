@@ -1,4 +1,5 @@
-import initSqlJs from 'sql.js';
+// @ts-ignore
+import initSqlJ from 'sql.js';
 import path from 'path';
 import fs from 'fs';
 
