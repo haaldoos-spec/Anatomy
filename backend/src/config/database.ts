@@ -11,22 +11,24 @@ let SQL: any = null;
 // Wrapper that mimics better-sqlite3 API
 const dbWrapper = {
   prepare: (sql: string) => {
-    const stmt = db.prepare(sql);
     return {
       get: (...params: any[]) => {
+        if (!db) throw new Error('Database not initialized');
+        const stmt = db.prepare(sql);
         stmt.bind(params);
+        let row: any = undefined;
         if (stmt.step()) {
           const cols = stmt.getColumnNames();
           const vals = stmt.get();
-          stmt.free();
-          const row: any = {};
+          row = {};
           cols.forEach((c: string, i: number) => row[c] = vals[i]);
-          return row;
         }
         stmt.free();
-        return undefined;
+        return row;
       },
       all: (...params: any[]) => {
+        if (!db) throw new Error('Database not initialized');
+        const stmt = db.prepare(sql);
         stmt.bind(params);
         const rows: any[] = [];
         while (stmt.step()) {
@@ -40,6 +42,8 @@ const dbWrapper = {
         return rows;
       },
       run: (...params: any[]) => {
+        if (!db) throw new Error('Database not initialized');
+        const stmt = db.prepare(sql);
         stmt.bind(params);
         stmt.step();
         stmt.free();
@@ -48,6 +52,7 @@ const dbWrapper = {
     };
   },
   exec: (sql: string) => {
+    if (!db) throw new Error('Database not initialized');
     db.run(sql);
     saveDb();
   }
@@ -59,6 +64,8 @@ function saveDb() {
 }
 
 export const initDb = async () => {
+  if (db) return; // Already initialized
+
   SQL = await initSqlJs();
   
   if (fs.existsSync(dbPath)) {
@@ -125,10 +132,18 @@ export const initDb = async () => {
   saveDb();
 
   // Seed data
-  const count = dbWrapper.prepare('SELECT COUNT(*) as count FROM quizzes').get() as any;
-  if (count?.count === 0) {
-    const { seedQuizzes } = require('../utils/seedData');
-    seedQuizzes();
+  const countStmt = db.prepare('SELECT COUNT(*) as count FROM quizzes');
+  if (countStmt.step()) {
+    const res = countStmt.get();
+    if (res[0] === 0) {
+      countStmt.free();
+      const { seedQuizzes } = require('../utils/seedData');
+      seedQuizzes();
+    } else {
+      countStmt.free();
+    }
+  } else {
+    countStmt.free();
   }
 
   console.log('Database initialized');

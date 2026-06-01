@@ -1,4 +1,4 @@
-import db from '../config/database';
+import db, { initDb } from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
 
 export const seedQuizzes = () => {
@@ -124,5 +124,7 @@ export const seedQuizzes = () => {
 };
 
 if (require.main === module) {
-  seedQuizzes();
+  initDb().then(() => {
+    seedQuizzes();
+  }).catch(console.error);
 }
